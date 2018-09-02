@@ -194,6 +194,23 @@ dependencies {
 }
 ```
 
+## Application Configuration File
+
+src/main/conf/application-configuration.json
+
+```
+{
+  "verticle": {
+    "host": "localhost",
+    "port": 8080,
+    "basePath": "mycontext"
+  },
+  ...
+}
+```
+This would imply calling `http://localhost:8080/mycontext/...`.
+
+The base path (or context) will be used in the Verticle when defining routers. Alternatively the base path might be derived from headers provided by a reverse proxy.
 
 ## Logging with SLF4J/Logback
 
