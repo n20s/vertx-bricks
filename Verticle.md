@@ -62,3 +62,60 @@
       }
    }
 ```
+
+## Logging with SLF4J/Logback
+
+build.gradle
+
+```
+dependencies {
+
+    compile "org.slf4j:slf4j-api:1.7.25"
+    compile "ch.qos.logback:logback-core:1.0.13"
+    compile "ch.qos.logback:logback-classic:1.0.13"
+    ...
+}    
+```
+src/main/resources/logback.groovy
+
+```
+def templatePattern = "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+appender("CONSOLE", ConsoleAppender) {
+    encoder(PatternLayoutEncoder) {
+        pattern = templatePattern
+    }
+}
+appender("FILE", RollingFileAppender) {
+    file = "logs/myserver.log"
+    encoder(PatternLayoutEncoder) {
+        pattern = templatePattern
+    }
+    rollingPolicy(TimeBasedRollingPolicy) {
+        fileNamePattern = "logs/myserver-%d{yyyy-MM-dd}.log"
+    }
+}
+
+root(INFO, ["CONSOLE", "FILE"])
+logger("com.myserver", DEBUG, ["CONSOLE", "FILE"], false)
+```
+CodeClass.groovy
+
+```
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+class CodeClass {
+
+   static Logger log = LoggerFactory.getLogger(CodeClass.class)
+
+	void method() {
+	   log.info "logged information"
+	}
+}
+```
+Results in:
+
+```
+2018-09-02 15:00:01.310 [vert.x-eventloop-thread-0] INFO  c.n.e.CodeClass - logged information
+```
