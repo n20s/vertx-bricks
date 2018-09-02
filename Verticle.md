@@ -79,6 +79,17 @@ dependencies {
 src/main/resources/logback.groovy
 
 ```
+/**
+ * Centralized logging with slf4j/logback.
+ *
+ * Note: Use VM option
+ *
+ *   -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory
+ *
+ * in order to let vert.x log to this logger.
+ * Netty will automatically detect slf4j.
+ */
+ 
 def templatePattern = "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
 appender("CONSOLE", ConsoleAppender) {
@@ -92,11 +103,15 @@ appender("FILE", RollingFileAppender) {
         pattern = templatePattern
     }
     rollingPolicy(TimeBasedRollingPolicy) {
+        // Note: Don't use compression if you require log search also to be possible in rotated archives older than one day.
         fileNamePattern = "logs/myserver-%d{yyyy-MM-dd}.log"
     }
 }
 
+// General setup
 root(INFO, ["CONSOLE", "FILE"])
+
+// More details for the specified package prefix.
 logger("com.myserver", DEBUG, ["CONSOLE", "FILE"], false)
 ```
 CodeClass.groovy
