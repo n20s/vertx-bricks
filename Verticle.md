@@ -109,9 +109,9 @@ class CodeClass {
 
    static Logger log = LoggerFactory.getLogger(CodeClass.class)
 
-	void method() {
-	   log.info "logged information"
-	}
+   void method() {
+      log.info "logged information"
+   }
 }
 ```
 Results in:
