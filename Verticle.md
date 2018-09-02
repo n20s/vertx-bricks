@@ -1,5 +1,19 @@
 # Verticle
 
+`Vert.x 3.x`, `Groovy 2.4`
+
+## IntelliJ Run/Debug Configuration
+
+`IntelliJ 2017.2`
+
+* Configuarion: `Application`
+* Main class: `io.vertx.core.Launcher`
+* VM options: Enable Vert.x to use the SLF4J logger instead of JUL, so that Netty (automatically detects SLF4J), Vert.x and your own code log to the same Logger:
+    `-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory`
+* Program arguments: `run com.n20s.vertx.ExampleVerticle -conf src/main/conf/application-configuration.json`
+* Enable `Single instance` to prevent duplicate instances trying to bind to the same port.
+
+
 ## HTTP-Server Template Example 
 
 ```
