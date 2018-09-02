@@ -96,6 +96,9 @@ mainClassName = 'io.vertx.core.Launcher'
 String runWatchForChange = "src/**/*"
 String runDoOnChange = "./gradlew classes"
 
+// Do not create the base jar with the build task, because we also build a fat/shadow jar.
+jar.enabled = false
+
 /*
  * Execute command and return output String. Return null if exit value != 0. 
  */
@@ -126,7 +129,7 @@ def gitRevision = {
        // As the command before succeeded, we expected this command to succeed too.
        throw new RuntimeException("Unexpected resulting status code in git command") 
     }
-    if (diffStat.length > 0) { 
+    if (diffStat.length() > 0) { 
         // Diff is not empty, local git repository has been modified.
         versionInfo += '-mod'
     }
