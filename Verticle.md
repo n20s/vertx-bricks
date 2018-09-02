@@ -63,6 +63,135 @@
    }
 ```
 
+## Gradle Configuration
+
+```
+buildscript {
+    repositories {
+        mavenCentral() }
+        mavenLocal()
+    }
+    dependencies {
+    }
+}
+
+plugins {
+    id 'groovy'
+    id 'idea'
+    id 'application'
+    id "com.github.johnrengelman.shadow" version "2.0.4"
+}
+
+// Version of the application
+version = '1.0'
+
+String serverDescription = "My Server"
+String serverName = "my-server"
+String companyDescription = "My Company"
+String mainVerticleName = "com.myserver.ExampleVerticle"
+
+sourceCompatibility = '1.8'
+String vertxVersion = "3.4.2"
+mainClassName = 'io.vertx.core.Launcher'
+String runWatchForChange = "src/**/*"
+String runDoOnChange = "./gradlew classes"
+
+/*
+ * Execute command and return output String. Return null if exit value != 0. 
+ */
+def executeCommand = { String cmd ->
+    Process process = cmd.execute()
+    // wait for execution to be finished and exitValue() is 0
+    if (process.waitFor() != 0) {
+       return null
+    }
+    return process.text.trim()
+}
+
+/*
+ * Derive git repository revision (if existent) to be included in the jar packaging.
+ */
+def gitRevision = {
+
+    // Get short description of revision.
+    def versionInfo = executeCommand('git rev-parse --short HEAD')    
+    if (versionInfo == null) {
+      // Return empty string if not successful. Accept fail, e.g. when the directory is not git managed at all.
+      return '' 
+    }
+
+	// Get dirty flag on managed files, does not reflect untracked files. Status code is 0 in both cases dirty or not.
+    def diffStat = executeCommand('git diff --shortstat') 
+    if (diffStat == null) {
+       // As the command before succeeded, we expected this command to succeed too.
+       throw new RuntimeException("Unexpected resulting status code in git command") 
+    }
+    if (diffStat.length > 0) { 
+        // Diff is not empty, local git repository has been modified.
+        versionInfo += '-mod'
+    }
+    return versionInfo
+}
+
+// create a single jar package with all dependencies
+shadowJar {
+    classifier = 'all'
+
+    mergeGroovyExtensionModules()
+    mergeServiceFiles {
+        include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
+    }
+
+    def versionInfo = gitRevision()
+    if (versionInfo) {
+        version += "-${versionInfo}"
+    }
+    manifest {
+        attributes 'Implementation-Title': "${serverDescription} jar-packaged vert.x verticle",
+                'Implementation-Version': version,
+                'Implementation-Vendor': companyDescription,
+                'Main-Class': mainClassName,
+                'Main-Verticle': mainVerticleName,
+                'Git-Tag': versionInfo
+    }
+    baseName = serverName
+}
+
+run {
+    // Run the main verticle class with a default development configuration.
+    // Use auto-redeploy (restarts the server when a change is detected)
+    args = ['run', mainVerticleName,
+            "-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory",
+            "-conf", "src/main/conf/application-configuration.json",
+            "--redeploy=$runWatchForChange",
+            "--launcher-class=$mainClassName",
+            "--on-redeploy=$runDoOnChange"]
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    compile "org.slf4j:slf4j-api:1.7.25"
+    compile "ch.qos.logback:logback-core:1.0.13"
+    compile "ch.qos.logback:logback-classic:1.0.13"
+
+    compile "io.vertx:vertx-core:$vertxVersion"
+    compile "io.vertx:vertx-lang-groovy:$vertxVersion"
+    compile "io.vertx:vertx-config:$vertxVersion"
+    compile "io.vertx:vertx-web:$vertxVersion"
+    compile "io.vertx:vertx-auth-shiro:$vertxVersion"
+
+    compile fileTree(dir: 'lib', include: ['*.jar'])
+
+    testCompile "junit:junit:4.12"
+    testCompile "io.vertx:vertx-unit:$vertxVersion"
+}
+```
+
+
 ## Logging with SLF4J/Logback
 
 build.gradle
